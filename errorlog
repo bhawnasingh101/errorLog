@@ -1,0 +1,96 @@
+function updateStatus(itemid,tmp_Status)
+{	
+	var itemVal=itemid;
+	var isLegal='';
+	var details='';
+
+	try {
+		
+       
+        $.ajax
+            ({
+                
+                url: _spPageContextInfo.webAbsoluteUrl + "/_api/web/lists/GetByTitle('ABC')/items(" + itemid + ")",
+                type: "POST",
+                async: false,
+                data: JSON.stringify
+                ({
+                    __metadata:
+                    {
+                        type: "SP.Data.ABCListItem"
+                    },
+                    
+                Status:tmp_Status
+				
+                    
+                }),
+                headers:
+                {
+                    "Accept": "application/json;odata=verbose",
+                    "Content-Type": "application/json;odata=verbose",
+                    "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+                    "IF-MATCH": "*",
+                    "X-HTTP-Method": "MERGE"
+                },
+                success: function (data) {
+					
+					alert("Details Submitted Successfully.");
+					window.location.href ="/sites/xyz/SitePages/Home.aspx";
+                },
+                error: function (xhr, status, error) {
+                    //alert(data.responseJSON.error);
+					//alert("An error occurred while Updating Status . Please contact your system administrator.");
+					var siteUrl = _spPageContextInfo.siteAbsoluteUrl;
+					var pageUrl = _spPageContextInfo.serverRequestPath;
+					var methodName = "updateStatus";
+					var errorType = e.name;
+					var errorMessage = e.message;
+					addErrorLog(siteUrl, pageUrl, methodName, errorType, errorMessage);
+                }
+            });
+    } catch (e) {
+        //alert("An error occurred while Updating Status . Please contact your system administrator.");
+        var siteUrl = _spPageContextInfo.siteAbsoluteUrl;
+        var pageUrl = _spPageContextInfo.serverRequestPath;
+        var methodName = "updateStatus";
+        var errorType = e.name;
+        var errorMessage = e.message;
+		addErrorLog(siteUrl, pageUrl, methodName, errorType, errorMessage);
+       
+    }
+	//alert("Document Uploaded Successfully.");
+}
+function addErrorLog(siteUrl, pageUrl, methodName, errorType, errorMessage) {
+	try {
+	    var clientContext = new SP.ClientContext.get_current();
+	    var oWeb = clientContext.get_web();
+	    var oList = oWeb.get_lists().getByTitle('ErrorLog');
+	    
+	    var listItemCreateInfo = new SP.ListItemCreationInformation();	    
+	    this.oListItem = oList.addItem(listItemCreateInfo);
+	    
+	    oListItem.set_item('Title', 'Error');
+	    oListItem.set_item('SiteUrl', siteUrl);
+	    oListItem.set_item('PageUrl', pageUrl);
+   	    oListItem.set_item('MethodName', methodName);
+	    oListItem.set_item('ErrorType', errorType);
+	    oListItem.set_item('ErrorMessage', errorMessage);
+	    oListItem.update();
+		
+	    clientContext.executeQueryAsync(
+		    Function.createDelegate(this, this.onSuccessAddErrorLog),
+		    Function.createDelegate(this, this.onFailAddErrorLog)
+	    );
+    }
+    catch (e) {
+        alert('An error occurred while trying to log an error. Please contact your system administrator.' + e.Message());
+    }
+}
+
+function onSuccessAddErrorLog() {
+    //alert('Item created');
+}
+
+function onFailAddErrorLog(sender, args) {
+    alert('An error occurred while trying to log an error. Please contact your system administrator.' + args.get_message());
+}
